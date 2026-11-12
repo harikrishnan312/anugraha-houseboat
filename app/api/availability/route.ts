@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const houseboatId = searchParams.get("houseboatId") || undefined;
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return badRequest("A valid date (YYYY-MM-DD) is required");
     await connectDB();
-    const data = await getAvailability(date, houseboatId);
+    const data = await getAvailability(date);
     return NextResponse.json({ success: true, data });
   } catch (e) { return jsonError(e); }
 }
