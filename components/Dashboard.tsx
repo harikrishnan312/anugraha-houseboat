@@ -26,7 +26,7 @@ export default function Dashboard() {
     "totalFleetRooms": number,
     "totalBookedRooms": number,
     "availableFleetRooms": number,
-  }>(null);
+  }| null>(null);
   const [tab, setTab] = useState("dashboard");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
