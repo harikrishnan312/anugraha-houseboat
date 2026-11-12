@@ -1,12 +1,12 @@
 import mongoose, { Schema, models, model } from "mongoose";
 
 const BookingSchema = new Schema({
-  houseboatId: { type: Schema.Types.ObjectId, ref: "Houseboat", required: true, index: true },
+  houseboatId: { type: Schema.Types.ObjectId, ref: "Houseboat", default: null, },
   bookingDate: { type: Date, required: true, index: true },
   bookingType: { type: String, enum: ["sharing", "individual"], required: true },
   roomsBooked: { type: Number, required: true, min: 1 },
-  clientName: { type: String, required: true, trim: true, maxlength: 120 },
-  mobile: { type: String, required: true, trim: true, maxlength: 20 },
+  clientName: { type: String, trim: true, maxlength: 120 },
+  mobile: { type: String,trim: true, maxlength: 20 },
   totalAmount: { type: Number, required: true, min: 0 },
   advanceAmount: { type: Number, required: true, min: 0 },
   balanceAmount: { type: Number, required: true, min: 0 },

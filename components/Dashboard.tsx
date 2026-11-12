@@ -13,7 +13,7 @@ type Availability = { houseboat: Boat; totalRooms: number; bookedRooms: number; 
 
 const today = () => {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 const money = (n: number) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
@@ -22,6 +22,11 @@ export default function Dashboard() {
   const [boats, setBoats] = useState<Boat[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [availability, setAvailability] = useState<Availability[]>([]);
+  const [availabilityData, setAvailabilityData] = useState<{
+    "totalFleetRooms": number,
+    "totalBookedRooms": number,
+    "availableFleetRooms": number,
+  }[]>([]);
   const [tab, setTab] = useState("dashboard");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -47,7 +52,8 @@ export default function Dashboard() {
       ]);
       if (!b.success || !a.success || !h.success) throw new Error(b.message || a.message || h.message || "Unable to load data");
       setBookings(b.data);
-      setAvailability(a.data);
+      setAvailability(a.data.houseboats);
+      setAvailabilityData(a.data);
       setBoats(h.data);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Unable to load data");
@@ -57,11 +63,11 @@ export default function Dashboard() {
   useEffect(() => { void load(); }, [load]);
 
   const stats = useMemo(() => {
-    const totalRooms = availability.reduce((s, x) => s + x.totalRooms, 0);
-    const bookedRooms = availability.reduce((s, x) => s + x.bookedRooms, 0);
+    const totalRooms = availabilityData?.totalFleetRooms || 0;
+    const bookedRooms = availabilityData?.totalBookedRooms || 0;
     return {
-      boats: availability.length, totalRooms, bookedRooms,
-      availableRooms: totalRooms - bookedRooms,
+      boats: availability?.length, totalRooms, bookedRooms,
+      availableRooms: availabilityData?.availableFleetRooms || 0,
       individual: bookings.filter(x => x.status === "confirmed" && x.bookingType === "individual").length,
       sharing: bookings.filter(x => x.status === "confirmed" && x.bookingType === "sharing").length
     };
@@ -164,12 +170,12 @@ export default function Dashboard() {
       {tab === "reports" && <Reports date={date} />}
 
       {showBooking && <Modal title="Create booking" close={() => setShowBooking(false)}><form onSubmit={submitBooking} className="grid gap-3 sm:grid-cols-2">
-        <Field label="Houseboat"><select required value={bookingForm.houseboatId} onChange={e => setBookingForm({ ...bookingForm, houseboatId: e.target.value })} className="field"><option value="">Select houseboat</option>{boats.filter(b => b.status === "active").map(b => <option key={b._id} value={b._id}>{b.boatName} ({b.totalRooms} rooms)</option>)}</select></Field>
+        <Field label="Houseboat"><select required={bookingForm.bookingType === "individual" || bookingForm.bookingType === ""} value={bookingForm.houseboatId} onChange={e => setBookingForm({ ...bookingForm, houseboatId: e.target.value })} className="field"><option value="">Select houseboat</option>{boats.filter(b => b.status === "active").map(b => <option key={b._id} value={b._id}>{b.boatName} ({b.totalRooms} rooms)</option>)}</select></Field>
         <Field label="Booking date"><input required type="date" value={bookingForm.bookingDate} onChange={e => setBookingForm({ ...bookingForm, bookingDate: e.target.value })} className="field" /></Field>
         <Field label="Booking type"><select value={bookingForm.bookingType} onChange={e => setBookingForm({ ...bookingForm, bookingType: e.target.value, roomsBooked: e.target.value === "individual" ? String(boats.find(b => b._id === bookingForm.houseboatId)?.totalRooms || 1) : "1" })} className="field"><option value="sharing">Sharing</option><option value="individual">Individual (entire boat)</option></select></Field>
         <Field label="Rooms"><input required min="1" type="number" value={bookingForm.roomsBooked} disabled={bookingForm.bookingType === "individual"} onChange={e => setBookingForm({ ...bookingForm, roomsBooked: e.target.value })} className="field" /></Field>
-        <Field label="Customer name"><input required value={bookingForm.clientName} onChange={e => setBookingForm({ ...bookingForm, clientName: e.target.value })} className="field" /></Field>
-        <Field label="Mobile"><input required value={bookingForm.mobile} onChange={e => setBookingForm({ ...bookingForm, mobile: e.target.value })} className="field" /></Field>
+        <Field label="Customer name"><input value={bookingForm.clientName} onChange={e => setBookingForm({ ...bookingForm, clientName: e.target.value })} className="field" /></Field>
+        <Field label="Mobile"><input value={bookingForm.mobile} onChange={e => setBookingForm({ ...bookingForm, mobile: e.target.value })} className="field" /></Field>
         <Field label="Total amount"><input required min="0" type="number" value={bookingForm.totalAmount} onChange={e => setBookingForm({ ...bookingForm, totalAmount: e.target.value })} className="field" /></Field>
         <Field label="Advance amount"><input required min="0" type="number" value={bookingForm.advanceAmount} onChange={e => setBookingForm({ ...bookingForm, advanceAmount: e.target.value })} className="field" /></Field>
         <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={bookingForm.isAgent} onChange={e => setBookingForm({ ...bookingForm, isAgent: e.target.checked })} /> Booking through agent</label>
@@ -190,7 +196,7 @@ export default function Dashboard() {
 function BookingList({ bookings, cancelBooking }: { bookings: Booking[]; cancelBooking: (id: string) => void }) {
   if (!bookings.length) return <p className="text-sm text-slate-500">No bookings for this date.</p>;
   return <div className="space-y-3">{bookings.map(b => {
-    const boatName = typeof b.houseboatId === "object" ? b.houseboatId.boatName : "Houseboat";
+    const boatName = typeof b.houseboatId === "object" ? b.houseboatId?.boatName : "Houseboat";
     return <div key={b._id} className="rounded-lg border border-slate-100 p-3">
       <div className="flex flex-wrap justify-between gap-2"><div><strong>{b.clientName}</strong><p className="text-xs text-slate-500">{boatName} · {b.mobile}</p></div><span className="rounded-full bg-cyan-50 px-2 py-1 text-xs capitalize text-cyan-800">{b.bookingType} · {b.roomsBooked} room(s)</span></div>
       <div className="mt-3 grid grid-cols-3 gap-2 text-xs"><div><p className="text-slate-500">Total</p><strong>{money(b.totalAmount)}</strong></div><div><p className="text-slate-500">Advance</p><strong>{money(b.advanceAmount)}</strong></div><div><p className="text-slate-500">Balance</p><strong>{money(b.balanceAmount)}</strong></div></div>
@@ -209,7 +215,7 @@ function Reports({ date }: { date: string }) {
   if (error) return <p className="text-red-600">{error}</p>;
   if (!data) return <p className="text-slate-500">Loading report…</p>;
   return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    {[["Bookings", data.bookingCount], ["Revenue", money(data.totalAmount)], ["Advance collected", money(data.advanceAmount)], ["Outstanding", money(data.balanceAmount)]].map(([k,v]) => <div key={String(k)} className="rounded-xl border bg-white p-5"><p className="text-sm text-slate-500">{k}</p><p className="mt-2 text-2xl font-bold">{v}</p></div>)}
+    {[["Bookings", data.bookingCount], ["Revenue", money(data.totalAmount)], ["Advance collected", money(data.advanceAmount)], ["Outstanding", money(data.balanceAmount)]].map(([k, v]) => <div key={String(k)} className="rounded-xl border bg-white p-5"><p className="text-sm text-slate-500">{k}</p><p className="mt-2 text-2xl font-bold">{v}</p></div>)}
   </div>;
 }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block text-sm font-medium">{label}{children}</label>; }

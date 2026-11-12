@@ -7,12 +7,21 @@ export const houseboatSchema = z.object({
 });
 
 export const bookingSchema = z.object({
-  houseboatId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid houseboat ID"),
+  houseboatId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid houseboat ID").or(z.literal("")),
   bookingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
   bookingType: z.enum(["sharing", "individual"]),
   roomsBooked: z.coerce.number().int().min(1),
-  clientName: z.string().trim().min(2).max(120),
-  mobile: z.string().trim().min(6).max(20),
+  clientName: z.string()
+    .trim()
+    .max(120)
+    .optional()
+    .default(""),
+
+  mobile: z.string()
+    .trim()
+    .max(20)
+    .optional()
+    .default(""),
   totalAmount: z.coerce.number().min(0),
   advanceAmount: z.coerce.number().min(0),
   isAgent: z.boolean().default(false),
