@@ -17,6 +17,7 @@ export async function PATCH(request: NextRequest, context: Context) {
     const body = bookingSchema.parse(await request.json());
     const data = await updateBooking(id, body);
     return NextResponse.json({ success: true, data });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e?.message?.includes("booking") || e?.message?.includes("room") || e?.message?.includes("Houseboat")) {
       return badRequest(e.message, 409);

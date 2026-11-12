@@ -202,6 +202,7 @@ function BookingList({ bookings, cancelBooking }: { bookings: Booking[]; cancelB
 }
 
 function Reports({ date }: { date: string }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
   useEffect(() => { fetch(`/api/reports?from=${date}&to=${date}`).then(r => r.json()).then(r => { if (r.success) setData(r.data); else setError(r.message); }).catch(() => setError("Unable to load report")); }, [date]);

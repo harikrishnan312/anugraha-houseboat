@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     const body = houseboatSchema.parse(await request.json());
     const data = await Houseboat.create(body);
     return NextResponse.json({ success: true, data }, { status: 201 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e?.code === 11000) return NextResponse.json({ success: false, message: "Houseboat name already exists" }, { status: 409 });
     return jsonError(e);

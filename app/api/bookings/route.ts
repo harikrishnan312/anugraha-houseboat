@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
     const houseboatId = searchParams.get("houseboatId");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filter: any = {};
     if (date) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return badRequest("date must be YYYY-MM-DD");
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
     const body = bookingSchema.parse(await request.json());
     const data = await createBooking(body);
     return NextResponse.json({ success: true, data }, { status: 201 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e?.message?.includes("booking") || e?.message?.includes("room") || e?.message?.includes("Houseboat")) {
       return badRequest(e.message, 409);

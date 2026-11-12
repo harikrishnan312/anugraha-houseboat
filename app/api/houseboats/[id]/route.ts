@@ -29,6 +29,7 @@ export async function PATCH(request: NextRequest, context: Context) {
     Object.assign(current, body);
     await current.save();
     return NextResponse.json({ success: true, data: current });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e?.code === 11000) return badRequest("Houseboat name already exists", 409);
     return jsonError(e);
