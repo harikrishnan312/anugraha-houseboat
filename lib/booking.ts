@@ -20,6 +20,7 @@ export type BookingInput = {
 
 export async function createBooking(input: BookingInput) {
   const session = await mongoose.startSession();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let created: any = null;
 
   try {
@@ -195,6 +196,7 @@ export async function getAvailability(bookingDate: string) {
 
 export async function updateBooking(bookingId: string, input: BookingInput) {
   const session = await mongoose.startSession();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let updated: any = null;
   try {
     await session.withTransaction(async () => {
